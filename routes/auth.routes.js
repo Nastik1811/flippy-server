@@ -1,5 +1,5 @@
 const {Router} = require('express')
-const {createUser} = require('../controllers/userController')
+const {createUser, login} = require('../controllers/userController')
 const router = Router()
 const {check, validationResult} = require('express-validator')
 
@@ -14,7 +14,12 @@ router.post(
 )
 
 router.post(
-    '/login'
+    '/login',
+    [
+        check('email', 'Incorrect email').normalizeEmail().isEmail(),
+        check('password', 'This filed shouldn\'t be empty').exists()
+    ],
+    login
 )
 
 

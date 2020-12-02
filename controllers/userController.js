@@ -1,7 +1,9 @@
 const pool = require('../db/')
 const bcrypt = require('bcrypt')
+const config = require('config')
 const User = require('../models/User')
 const {check, validationResult} = require('express-validator')
+const {jwt} = require('jsonwebtoken')
 
 const createUser = async (req, res) => {
     try{
@@ -13,7 +15,7 @@ const createUser = async (req, res) => {
             })
         }
         const {email, password, username} = req.body
-        const exists = User.exists({email})
+        const exists = await User.exists({email})
 
         if (exists) {
             return res
@@ -31,6 +33,47 @@ const createUser = async (req, res) => {
 
 }
 
+const login = async (req, res) => {
+    try{
+        const errors = validationResult(req)
+        if(!errors.isEmpty()){
+            return res.status(400).json({
+                errors: errors.array(),
+                message: 'Incorrect data format'
+            })
+        }
+        const {email, password} = req.body
+        const user = await User.findOne({email})
+
+        if (!user) {
+            return res
+                .status(400)
+                .json({ message: 'This email address is not registered yet.' })
+        }
+
+        const isPasswordsMatch = await bcrypt.compare(password, user.password)
+        if(!isPasswordsMatch){
+            return res
+                .status(400)
+                .json({ message: 'Wrong password. Please, try again.' })
+        }
+        const token = jwt.sign(
+            {
+                userId: user.id
+            },
+            config.get('jwtSecret'),
+            {expiresIn: '1h'}
+        )
+
+        return res.json({token, userId: user.id})
+
+    }catch (e) {
+        return res.status(500).json({message: 'Something went wrong... Please, try again.'})
+    }
+
+}
+
 module.exports = {
-    createUser
+    createUser,
+    login
 }

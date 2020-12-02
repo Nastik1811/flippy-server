@@ -1,10 +1,10 @@
 const pool = require('../db')
 
 module.exports = class User{
-    constructor(userData){
-        this.username = userData.username
-        this.email = userData.email
-        this.password = userData.password
+    constructor({username, email, password}){
+        this.username = username
+        this.email = email
+        this.password = password
     }
 
     async save(){
@@ -15,9 +15,25 @@ module.exports = class User{
         )
     }
 
-    static async findOne({id}){
-        const candidate = await pool.query('SELECT 1 FROM users WHERE id= $1', [id])
+    static async findOne({id, email}){
+        let candidate;
+        if(id){
+            candidate = await pool.query('SELECT * FROM users WHERE id=$1 FETCH FIRST ROW ONLY', [id])
+        }else if(email){
+            candidate = await pool.query('SELECT * FROM users WHERE email=$1 FETCH FIRST ROW ONLY', [email])
+        }
+        else{
+            return null
+        }
 
+        if(candidate.rowCount === 0) return null
+
+        return {
+            id: candidate.rows[0].id,
+            username: candidate.rows[0].username,
+            email: candidate.rows[0].email,
+            password: candidate.rows[0].password
+        }
     }
 
     static async exists({email}){
