@@ -1,0 +1,10 @@
+{
+  "port" : 5000,
+  "pool_settings": {
+    "user": "nastya",
+    "password": "1204",
+    "host": "localhost",
+    "database": "flippydb",
+    "port": 5432
+  }
+}
