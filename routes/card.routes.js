@@ -4,5 +4,6 @@ const auth = require('../middleware/auth.middleware')
 const router = Router()
 
 router.get('/', auth, getCards)
+router.post('/', auth, createCard)
 
 module.exports = router

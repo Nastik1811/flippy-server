@@ -11,7 +11,7 @@ module.exports = class Card{
     async save(){
         try{ 
             return await pool.query(
-            'INSERT INTO cards (user_id, collection_id, front, back, created, card_status, scheduled_review) ' +
+            'INSERT INTO cards (user_id, collection_id, front, back, created, status, scheduled_review) ' +
             'VALUES ($1, $2, $3, $4, $5, $6, $7)',
             [this.user_id, this.collection_id, this.front, this.back, new Date(), 'new', new Date()]
         )}catch(e){
@@ -21,16 +21,16 @@ module.exports = class Card{
 
     static createModel(candidate){
         return {
-            id: candidate.rows[0].id,
-            user_id: candidate.rows[0].user_id,
-            collection_id: candidate.rows[0].collection_id,
-            front: candidate.rows[0].front,
-            back: candidate.rows[0].back,
-            created: candidate.rows[0].created,
-            status: candidate.rows[0].status,
-            last_review: candidate.rows[0].last_review,
-            scheduled_review: candidate.rows[0].scheduled_review,
-            last_edited: candidate.rows[0].last_edited
+            id: candidate.id,
+            user_id: candidate.user_id,
+            collection_id: candidate.collection_id,
+            front: candidate.front,
+            back: candidate.back,
+            created: candidate.created,
+            status: candidate.status,
+            last_review: candidate.last_review,
+            scheduled_review: candidate.scheduled_review,
+            last_edited: candidate.last_edited
         }
     }
 
@@ -51,7 +51,6 @@ module.exports = class Card{
     static async find({user_id}){
 
         let data = await pool.query('SELECT * FROM cards WHERE user_id=$1', [user_id])
-        console.log(data)
         return data.rows.map(candidate => this.createModel(candidate))
     }
 }
