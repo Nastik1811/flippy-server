@@ -60,11 +60,10 @@ const login = async (req, res) => {
             {
                 userId: user.id
             },
-            config.get('jwtSecret'),
-            {expiresIn: '1h'}
+            config.get('jwtSecret')
         )
 
-        return res.json({token, userId: user.id})
+        return res.json({token, userId: user.id, username: user.username})
 
     }catch (e) {
         return res.status(500).json({message: e.message})

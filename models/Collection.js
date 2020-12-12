@@ -8,14 +8,16 @@ module.exports = class Collection{
 
     async save(){
         try{
-            return await pool.query(
+            let collection = await pool.query(
             'INSERT INTO collections (user_id, name, created, last_edited) ' +
-            'VALUES ($1, $2, $3, $4)',
-            [this.user_id, this.name, new Date(), new Date()]
-        )}catch(e){
+            'VALUES ($1, $2, $3, $4) RETURNING *',
+            [this.user_id, this.name, new Date(), new Date()])
+            return Collection.createModel(collection.rows[0])
+        }catch(e){
             throw e
         }
     }
+
     static createModel(candidate){
         return {
             id: candidate.id,
@@ -43,8 +45,17 @@ module.exports = class Collection{
 
     static async find({user_id}){
         const data = await pool.query('SELECT * FROM collections WHERE user_id=$1', [user_id])
-        console.log(user_id)
         return data.rows.map(candidate => this.createModel(candidate))
+    }
+
+    static async delete({id}){
+        try{
+            const candidate = await pool.query('DELETE FROM collections WHERE id=$1 RETURNING *', [id])
+            return this.createModel(candidate.rows[0])
+        }catch (e) {
+            throw e
+        }
+
     }
 
     static async exists({name, user_id}){

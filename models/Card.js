@@ -22,7 +22,10 @@ module.exports = class Card{
     static createModel(candidate){
         return {
             id: candidate.id,
-            collection_id: candidate.collection_id,
+            collection:{
+                id: candidate.collection_id,
+                name: candidate.collection_name
+            },
             front: candidate.front,
             back: candidate.back,
             created: candidate.created,
@@ -32,7 +35,7 @@ module.exports = class Card{
             last_edited: candidate.last_edited
         }
     }
-
+//join with collections
     static async findOne({id, user_id}){
         let candidate
         if(id){
@@ -50,5 +53,14 @@ module.exports = class Card{
     static async find({user_id}){
         const data = await pool.query('SELECT * FROM cards WHERE user_id=$1', [user_id])
         return data.rows.map(candidate => this.createModel(candidate))
+    }
+
+    static async delete({id}){
+        try{
+            const candidate = await pool.query('DELETE FROM cards WHERE id=$1 RETURNING *', [id])
+            return this.createModel(candidate.rows[0])
+        }catch (e) {
+            throw e
+        }
     }
 }
