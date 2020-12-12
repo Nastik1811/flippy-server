@@ -1,4 +1,4 @@
-const pool = require('../db')
+const pool = require('../db/index')
 
 module.exports = class User{
     constructor({username, email, password}){
@@ -10,9 +10,18 @@ module.exports = class User{
     async save(){
         const user = await pool.query(
             'INSERT INTO USERS (username, email, password, created) ' +
-            'VALUES ($1, $2, $3, $4) RETURNING user_id',
+            'VALUES ($1, $2, $3, $4)',
             [this.username, this.email, this.password, new Date()]
         )
+    }
+
+    static createModel(candidate){
+        return {
+            id: candidate.id,
+            username: candidate.username,
+            email: candidate.email,
+            password: candidate.password
+        }
     }
 
     static async findOne({id, email}){
@@ -28,12 +37,7 @@ module.exports = class User{
 
         if(candidate.rowCount === 0) return null
 
-        return {
-            id: candidate.rows[0].id,
-            username: candidate.rows[0].username,
-            email: candidate.rows[0].email,
-            password: candidate.rows[0].password
-        }
+        return this.createModel(candidate.rows[0])
     }
 
     static async exists({email}){

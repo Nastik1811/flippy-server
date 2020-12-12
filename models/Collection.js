@@ -16,11 +16,21 @@ module.exports = class Collection{
             throw e
         }
     }
-
-    static async findOne({id}){
+    static createModel(candidate){
+        return {
+            id: candidate.id,
+            name: candidate.name,
+            last_edited: candidate.last_edited,
+            created: candidate.created
+        }
+    }
+    static async findOne({id, name, user_id}){
         let candidate;
         if(id){
-            candidate = await pool.query('SELECT * FROM collections WHERE id=$1 FETCH FIRST ROW ONLY', [id])
+            candidate = await pool.query('SELECT * FROM collections WHERE id=$1 AND user_id=$2 FETCH FIRST ROW ONLY', [id, user_id])
+        }
+        else if(name){
+            candidate = await pool.query('SELECT * FROM collections WHERE name=$1 AND user_id=$2 FETCH FIRST ROW ONLY', [name, user_id])
         }
         else{
             return null
@@ -28,13 +38,16 @@ module.exports = class Collection{
 
         if(candidate.rowCount === 0) return null
 
-        return {
-            id: candidate.rows[0].id,
-            user_id: candidate.rows[0].user_id,
-            name: candidate.rows[0].email,
-            last_edited: candidate.rows[0].last_edited,
-            created: candidate.rows[0].created
-        }
+        return this.createModel(candidate.rows[0])
+    }
+
+    static async find({user_id}){
+        const data = await pool.query('SELECT * FROM collections WHERE user_id=$1', [user_id])
+        return data.rows.map(candidate => this.createModel(candidate))
+    }
+
+    static async exists({name, user_id}){
+        return (await pool.query('SELECT 1 FROM collection WHERE name = $1 AND user_id=$2', [name, user_id])).rowCount > 0
     }
 
 }

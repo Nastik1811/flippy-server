@@ -14,7 +14,6 @@ module.exports = (req, res, next) => {
         next()
 
     }catch (e) {
-        console.log(e.message)
         return res.status(401).json({message: 'Authorisation failed'})
     }
 }

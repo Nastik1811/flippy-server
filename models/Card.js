@@ -22,7 +22,6 @@ module.exports = class Card{
     static createModel(candidate){
         return {
             id: candidate.id,
-            user_id: candidate.user_id,
             collection_id: candidate.collection_id,
             front: candidate.front,
             back: candidate.back,
@@ -49,8 +48,7 @@ module.exports = class Card{
     }
 
     static async find({user_id}){
-
-        let data = await pool.query('SELECT * FROM cards WHERE user_id=$1', [user_id])
+        const data = await pool.query('SELECT * FROM cards WHERE user_id=$1', [user_id])
         return data.rows.map(candidate => this.createModel(candidate))
     }
 }

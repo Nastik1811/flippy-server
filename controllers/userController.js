@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt')
 const config = require('config')
 const User = require('../models/User')
 const {check, validationResult} = require('express-validator')
-const {jwt} = require('jsonwebtoken')
+const jwt = require('jsonwebtoken')
 
 const createUser = async (req, res) => {
     try{
@@ -28,7 +28,7 @@ const createUser = async (req, res) => {
 
         return res.status(201).json({message: "Success! User has been created!"})
     }catch (e) {
-        return res.status(500).json({message: 'Something went wrong... Please, try again.'})
+        return res.status(500).json({message:  e.message})
     }
 
 }
@@ -44,7 +44,6 @@ const login = async (req, res) => {
         }
         const {email, password} = req.body
         const user = await User.findOne({email})
-
         if (!user) {
             return res
                 .status(400)
@@ -68,7 +67,7 @@ const login = async (req, res) => {
         return res.json({token, userId: user.id})
 
     }catch (e) {
-        return res.status(500).json({message: 'Something went wrong... Please, try again.'})
+        return res.status(500).json({message: e.message})
     }
 
 }
