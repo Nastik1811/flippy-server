@@ -1,4 +1,4 @@
-const pool = require('../db')
+const pool = require('../db/index')
 
 module.exports = class Collection{
     constructor({user_id, name}){
@@ -7,9 +7,9 @@ module.exports = class Collection{
     }
 
     async save(){
-        try{ 
-            await pool.query(
-            'INSERT INTO collectons (user_id, name, created, last_edited) ' +
+        try{
+            return await pool.query(
+            'INSERT INTO collections (user_id, name, created, last_edited) ' +
             'VALUES ($1, $2, $3, $4)',
             [this.user_id, this.name, new Date(), new Date()]
         )}catch(e){
@@ -43,11 +43,12 @@ module.exports = class Collection{
 
     static async find({user_id}){
         const data = await pool.query('SELECT * FROM collections WHERE user_id=$1', [user_id])
+        console.log(user_id)
         return data.rows.map(candidate => this.createModel(candidate))
     }
 
     static async exists({name, user_id}){
-        return (await pool.query('SELECT 1 FROM collection WHERE name = $1 AND user_id=$2', [name, user_id])).rowCount > 0
+        return (await pool.query('SELECT 1 FROM collections WHERE name = $1 AND user_id=$2', [name, user_id])).rowCount > 0
     }
 
 }

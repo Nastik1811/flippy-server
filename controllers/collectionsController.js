@@ -4,11 +4,13 @@ const createCollection = async (req, res) => {
     try{
         const {name}  = req.body
         const user_id = req.user.userId
+        const exists = await Collection.exists({name, user_id})
 
-        if(await Collection.exists({name, user_id})){
+        if(exists){
             return res.status(500).json({message: "Collection with the same name is already exists"})
         }
         const collection = new Collection({user_id, name})
+
         await collection.save()
 
         return res.status(201).json({message: "Success!"})
@@ -19,8 +21,7 @@ const createCollection = async (req, res) => {
 
 const getCollections = async (req, res) => {
     try{
-        const {user_id}  = req.user.userId
-
+        const user_id = req.user.userId
         const collections = await Collection.find({user_id})
         return res.status(201).json({collections})
 
