@@ -61,5 +61,18 @@ module.exports = class Collection{
     static async exists({name, user_id}){
         return (await pool.query('SELECT 1 FROM collections WHERE name = $1 AND user_id=$2', [name, user_id])).rowCount > 0
     }
+    //add time comparison
+    static async getCollectionsToReview({user_id}){
+        const data = await pool.query('SELECT collections.id, name, count(1) as cards_number ' +
+            'FROM collections INNER JOIN cards ON collections.id = collection_id ' +
+            'WHERE collections.user_id=$1 GROUP BY (collections.id, name);'
+            , [user_id])
+
+        return data.rows.map(candidate => ({
+            id: candidate.id,
+            name: candidate.name,
+            cards_number: candidate.cards_number
+        }))
+    }
 
 }

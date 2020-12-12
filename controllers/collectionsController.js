@@ -40,9 +40,21 @@ const deleteCollection = async (req, res) => {
     }
 }
 
+const getCollectionsToReview = async (req, res) => {
+    try{
+        const user_id = req.user.userId
+        const collections = await Collection.getCollectionsToReview({user_id})
+        return res.status(201).json(collections)
+
+    }catch (e) {
+        return res.status(500).json({message: e.message})
+    }
+}
+
 module.exports = {
     createCollection,
     getCollections,
-    deleteCollection
+    deleteCollection,
+    getCollectionsToReview
 }
 

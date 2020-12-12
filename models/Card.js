@@ -22,10 +22,7 @@ module.exports = class Card{
     static createModel(candidate){
         return {
             id: candidate.id,
-            collection:{
-                id: candidate.collection_id,
-                name: candidate.collection_name
-            },
+            collection_id: candidate.collection_id,
             front: candidate.front,
             back: candidate.back,
             created: candidate.created,
@@ -62,5 +59,9 @@ module.exports = class Card{
         }catch (e) {
             throw e
         }
+    }
+
+    static async countToReview({user_id}){
+        return (await pool.query('SELECT 1 FROM cards WHERE user_id=$1', [user_id])).rowCount
     }
 }

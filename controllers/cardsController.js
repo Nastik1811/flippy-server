@@ -1,7 +1,5 @@
 const Card = require('../models/Card')
 
-//getCards
-//createCard
 //getCardById
 //getCardsGroupByCollection ???
 //getCardsNeedRepetition
@@ -35,15 +33,25 @@ const getCards = async (req, res) => {
 const deleteCard = async (req, res) => {
     try{
         const card = await Card.delete({id: req.params.id})
-        return res.status(201).json({card})
+        return res.json({card})
     }catch (e) {
         return res.status(500).json({message: e.message})
     }
 }
 
+const getCountToReview = async (req, res) => {
+    try{
+        const user_id = req.user.userId
+        const count = await Card.countToReview({user_id})
+        return res.json({count})
+    }catch (e) {
+        return res.status(500).json({message: e.message})
+    }
+}
 
 module.exports = {
     getCards,
     createCard,
-    deleteCard
+    deleteCard,
+    getCountToReview
 }
