@@ -45,8 +45,88 @@ const getCards= async (req, res) => {
     }
 }
 
+const updateCardProgress = async (req, res) => {
+    try {
+        const {card, mark} = req.body
+        const currentDateTime = new Date()
+        const lastReview = new Date(card.last_review)
+        const scheduledReview = new Date(card.scheduled_review)
+
+        const updatedCard = await Card.updateCardProgress({
+            id: card.id,
+            currentDateTime,
+            nextReviewDate: getNextReviewDate({scheduledReview, lastReview, currentDateTime, status: card.status, mark}),
+            newStatus: getNewStatus({status: card.status, mark})
+        })
+        console.log(updatedCard)
+        return res.status(200)
+
+    }catch (e) {
+        return res.status(500).json({message: e.message})
+    }
+}
+const MINUTE = 60000
+
+const getNewStatus = ({status, mark}) => {
+    if(status === 'new'){
+        return 'learning'
+    }
+    if (status === 'learning' && mark === 'excellent'){
+        return 'review'
+    }
+    return undefined
+}
+const getNextReviewDate = ({scheduledReview, lastReview, currentDateTime, status, mark}) => {
+    let newIntervalInMilliseconds
+
+    switch (status) {
+        case 'new':
+            newIntervalInMilliseconds = 10 * MINUTE
+            break
+        case 'learning':
+            if(mark === 'bad'){
+                newIntervalInMilliseconds = 10 * MINUTE
+            }else if(mark === 'good'){
+                newIntervalInMilliseconds = 60 * MINUTE
+            }else {
+                newIntervalInMilliseconds = 24 * 60 * MINUTE
+            }
+            break
+        case 'review':
+            newIntervalInMilliseconds = calculateInterval({lastReview, scheduledReview, currentDateTime, mark})
+            break
+        default:
+            throw new Error("Invalid card status")
+    }
+    return new Date(Date.now() + newIntervalInMilliseconds)
+}
+
+const calculateInterval = ({lastReview, scheduledReview, currentDateTime, mark}) => {
+    let recommendedInterval= scheduledReview.getTime() - lastReview.getTime()
+    let delay = currentDateTime.getTime() - scheduledReview.getTime()
+
+    let newInterval
+
+    switch(mark){
+        case 'bad':
+            newInterval = recommendedInterval + delay/4
+            break
+        case 'good':
+            newInterval = (recommendedInterval + delay/2 ) * 1.5
+            break
+        case 'excellent':
+            newInterval = (recommendedInterval + delay) * 2
+            break
+        default:
+            throw Error
+    }
+
+    return newInterval
+}
+
 module.exports = {
     getCards,
     createCard,
-    deleteCard
+    deleteCard,
+    updateCardProgress
 }

@@ -76,5 +76,23 @@ module.exports = class Card{
         return data.rows.map(candidate => this.createModel(candidate))
     }
 
-
+    static async updateCardDetails({id, collection_id }){}
+    static async updateCardProgress({id, currentDateTime, nextReviewDate, newStatus}){
+        try{
+            if(newStatus){
+                const candiadte = await pool.query(
+                    'UPDATE cards SET status=$1, scheduled_review=$2, last_review=$3 WHERE id=$4 RETURNING *',
+                    [newStatus, nextReviewDate, currentDateTime, id]
+                )
+                return this.createModel(candiadte.rows[0])
+            }else {
+                await pool.query(
+                    'UPDATE cards SET scheduled_review = $1, last_review=$2 WHERE id=$3',
+                    [nextReviewDate, currentDateTime, id]
+                )
+            }
+        }catch (e) {
+            throw e
+        }
+    }
 }
