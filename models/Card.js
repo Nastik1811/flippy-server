@@ -61,7 +61,20 @@ module.exports = class Card{
         }
     }
 
-    static async countToReview({user_id}){
-        return (await pool.query('SELECT 1 FROM cards WHERE user_id=$1', [user_id])).rowCount
+    static async getCards({user_id, collection_id, needReview}){
+        let data
+        if(collection_id && needReview){
+            data = await pool.query('SELECT * FROM cards ' +
+                'WHERE user_id=$1 AND collection_id=$2 AND scheduled_review < now()', [user_id, collection_id])
+        }else if(collection_id){
+            data = await pool.query('SELECT * FROM cards WHERE user_id=$1 AND collection_id=$2', [user_id, collection_id])
+        }else if(needReview) {
+            data = await pool.query('SELECT * FROM cards WHERE user_id=$1 AND scheduled_review < now()', [user_id])
+        }else{
+            data = await pool.query('SELECT * FROM cards WHERE user_id=$1', [user_id])
+        }
+        return data.rows.map(candidate => this.createModel(candidate))
     }
+
+
 }

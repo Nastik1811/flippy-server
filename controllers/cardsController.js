@@ -20,16 +20,6 @@ const createCard = async (req, res) => {
     }
 }
 
-const getCards = async (req, res) => {
-    try{
-        const user_id = req.user.userId
-        const cards = await Card.find({user_id})
-        return res.status(201).json({cards})
-    }catch (e) {
-        return res.status(500).json({message: e.message})
-    }
-}
-
 const deleteCard = async (req, res) => {
     try{
         const card = await Card.delete({id: req.params.id})
@@ -39,11 +29,17 @@ const deleteCard = async (req, res) => {
     }
 }
 
-const getCountToReview = async (req, res) => {
+const getCards= async (req, res) => {
+    let collection_id = req.query.collection_id
+    let needReview = false
+    if(req.query.needReview){
+        needReview = JSON.parse(req.query.needReview)
+    }
+
     try{
         const user_id = req.user.userId
-        const count = await Card.countToReview({user_id})
-        return res.json({count})
+        const cards = await Card.getCards({user_id, needReview, collection_id})
+        return res.json({cards})
     }catch (e) {
         return res.status(500).json({message: e.message})
     }
@@ -52,6 +48,5 @@ const getCountToReview = async (req, res) => {
 module.exports = {
     getCards,
     createCard,
-    deleteCard,
-    getCountToReview
+    deleteCard
 }
