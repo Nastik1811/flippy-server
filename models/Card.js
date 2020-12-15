@@ -33,10 +33,10 @@ module.exports = class Card{
         }
     }
 //join with collections
-    static async findOne({id, user_id}){
+    static async findOne({id}){
         let candidate
         if(id){
-            candidate = await pool.query('SELECT * FROM cards WHERE id=$1 AND user_id=$2 FETCH FIRST ROW ONLY', [id, user_id])
+            candidate = await pool.query('SELECT * FROM cards WHERE id=$1 FETCH FIRST ROW ONLY', [id])
         }
         else{
             return null
@@ -44,7 +44,7 @@ module.exports = class Card{
 
         if(candidate.rowCount === 0) return null
 
-        return this.createModel(candidate)
+        return this.createModel(candidate.rows[0])
     }
 
     static async find({user_id}){
@@ -56,6 +56,15 @@ module.exports = class Card{
         try{
             const candidate = await pool.query('DELETE FROM cards WHERE id=$1 RETURNING *', [id])
             return this.createModel(candidate.rows[0])
+        }catch (e) {
+            throw e
+        }
+    }
+
+    static async deleteCardsCollection({collection_id}){
+        try{
+            const data = await pool.query('DELETE FROM cards WHERE collection_id=$1 RETURNING *', [collection_id])
+            return data.rows.map(candidate => this.createModel(candidate))
         }catch (e) {
             throw e
         }
@@ -76,7 +85,19 @@ module.exports = class Card{
         return data.rows.map(candidate => this.createModel(candidate))
     }
 
-    static async updateCardDetails({id, collection_id }){}
+    static async updateCardDetails({id, collection_id, front, back}){
+        try{
+            const candiadte = await pool.query(
+                'UPDATE cards SET collection_id=$1, front=$2, back=$3, last_edited=$4 WHERE id=$5 RETURNING *',
+                [collection_id, front, back, new Date(), id]
+            )
+            return this.createModel(candiadte.rows[0])
+
+        }catch (e) {
+            throw e
+        }
+    }
+
     static async updateCardProgress({id, currentDateTime, nextReviewDate, newStatus}){
         try{
             if(newStatus){

@@ -9,10 +9,8 @@ const createCard = async (req, res) => {
     try{
         const {collection_id, front, back}  = req.body
         const user_id = req.user.userId
-
         const card = new Card({user_id, collection_id, front, back})
         await card.save()
-
 
         return res.status(201).json({message: "Success!"})
     }catch (e) {
@@ -23,28 +21,62 @@ const createCard = async (req, res) => {
 const deleteCard = async (req, res) => {
     try{
         const card = await Card.delete({id: req.params.id})
-        return res.json({card})
+        return res.json({id: card.id})
+    }catch (e) {
+        return res.status(500).json({message: e.message})
+    }
+}
+
+const deleteCardsCollection = async (req, res) => {
+    try{
+        let collectionId = req.query.collectionId
+        if(!collectionId){
+            return res.status(500).json({message: "Collection is undefined"})
+        }
+        const cards = await Card.deleteCardsCollection({collection_id: collectionId})
+        return res.json({ids: cards.map(c => c.id)})
     }catch (e) {
         return res.status(500).json({message: e.message})
     }
 }
 
 const getCards= async (req, res) => {
-    let collection_id = req.query.collection_id
+    let collectionId = req.query.collectionId
     let needReview = false
     if(req.query.needReview){
         needReview = JSON.parse(req.query.needReview)
     }
-
     try{
         const user_id = req.user.userId
-        const cards = await Card.getCards({user_id, needReview, collection_id})
+        const cards = await Card.getCards({user_id, needReview, collection_id: collectionId})
         return res.json({cards})
     }catch (e) {
         return res.status(500).json({message: e.message})
     }
 }
 
+const getCard = async (req, res) => {
+    try{
+        const card = await Card.findOne({id: req.params.id})
+        return res.json({card})
+    }catch (e) {
+        return res.status(500).json({message: e.message})
+    }
+}
+
+const updateCard = async (req, res) => {
+    try {
+        const {front, back} = req.body
+        const collection_id = req.body.collection_id ? req.body.collection_id : null
+        //const collection_id = JSON.parse(req.body.collection_id)
+        //console.log(collection_id, typeof collection_id)
+        const card = await Card.updateCardDetails({id: req.params.id, collection_id, front, back})
+        return res.status(200).json({card})
+
+    }catch (e) {
+        return res.status(500).json({message: e.message})
+    }
+}
 const updateCardProgress = async (req, res) => {
     try {
         const {card, mark} = req.body
@@ -58,13 +90,13 @@ const updateCardProgress = async (req, res) => {
             nextReviewDate: getNextReviewDate({scheduledReview, lastReview, currentDateTime, status: card.status, mark}),
             newStatus: getNewStatus({status: card.status, mark})
         })
-        console.log(updatedCard)
         return res.status(200)
 
     }catch (e) {
         return res.status(500).json({message: e.message})
     }
 }
+
 const MINUTE = 60000
 
 const getNewStatus = ({status, mark}) => {
@@ -124,9 +156,13 @@ const calculateInterval = ({lastReview, scheduledReview, currentDateTime, mark})
     return newInterval
 }
 
+
 module.exports = {
     getCards,
+    getCard,
     createCard,
     deleteCard,
-    updateCardProgress
+    deleteCardsCollection,
+    updateCardProgress,
+    updateCard
 }
