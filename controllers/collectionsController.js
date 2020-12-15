@@ -32,9 +32,8 @@ const getCollections = async (req, res) => {
 
 const deleteCollection = async (req, res) => {
     try{
-        console.log(req.params)
         const collection = await Collection.delete({id: req.params.id})
-        return res.status(201).json({collection})
+        return res.status(201).json({id: collection.id})
     }catch (e) {
         return res.status(500).json({message: e.message})
     }
